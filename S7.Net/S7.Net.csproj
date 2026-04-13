@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
-    <TargetFrameworks>net452;net462;netstandard2.0;netstandard1.3;net5.0;net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>net452;net462;netstandard2.0;netstandard1.3;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Properties\S7.Net.snk</AssemblyOriginatorKeyFile>
     <InternalsVisibleTo>S7.Net.UnitTest</InternalsVisibleTo>
 
-    <PackageId>S7netplus</PackageId>
+    <PackageId>S7netplusXu</PackageId>
     <Title>S7.Net Plus</Title>
     <Description>A continuation of Juergen1969's Siemens communication library.</Description>
     <Authors>Derek Heiser;Michele Cattafesta;Michael Croes;Raphael Schlameuß</Authors>
@@ -28,7 +28,7 @@
     <DefineConstants>NET_FULL</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net5.0' And '$(TargetFramework)' != 'net6.0' And '$(TargetFramework)' != 'net7.0'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net5.0' And '$(TargetFramework)' != 'net6.0' And '$(TargetFramework)' != 'net7.0' And '$(TargetFramework)' != 'net8.0' And '$(TargetFramework)' != 'net9.0' And '$(TargetFramework)' != 'net10.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
   
