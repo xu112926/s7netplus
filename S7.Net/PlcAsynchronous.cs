@@ -170,7 +170,7 @@ namespace S7.Net
         public async Task<object?> ReadAsync(string variable, CancellationToken cancellationToken = default)
         {
             var adr = new PLCAddress(variable);
-            return await ReadAsync(adr.DataType, adr.DbNumber, adr.StartByte, adr.VarType, 1, (byte)adr.BitNumber, cancellationToken).ConfigureAwait(false);
+            return await ReadAsync(adr.DataType, adr.DbNumber, adr.StartByte, adr.VarType, adr.VarCount, (byte)adr.BitNumber, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -284,6 +284,17 @@ namespace S7.Net
         /// Please note that cancellation is advisory/cooperative and will not lead to immediate cancellation in all cases.</param>
         public async Task<List<DataItem>> ReadMultipleVarsAsync(List<DataItem> dataItems, CancellationToken cancellationToken = default)
         {
+            foreach (var batch in SplitReadDataItemsIntoBatches(dataItems))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await ReadMultipleVarsSingleRequestAsync(batch, cancellationToken).ConfigureAwait(false);
+            }
+
+            return dataItems;
+        }
+
+        private async Task ReadMultipleVarsSingleRequestAsync(List<DataItem> dataItems, CancellationToken cancellationToken)
+        {
             //Snap7 seems to choke on PDU sizes above 256 even if snap7
             //replies with bigger PDU size in connection setup.
             AssertPduSizeForRead(dataItems);
@@ -309,7 +320,6 @@ namespace S7.Net
             {
                 throw new PlcException(ErrorCode.ReadData, exc);
             }
-            return dataItems;
         }
 
         /// <summary>

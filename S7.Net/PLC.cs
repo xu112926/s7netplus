@@ -235,6 +235,55 @@ namespace S7.Net
                 .Sum(len => (len & 1) == 1 ? len + 1 : len);
         }
 
+        private IEnumerable<List<DataItem>> SplitReadDataItemsIntoBatches(List<DataItem> dataItems)
+        {
+            if (dataItems.Count == 0)
+            {
+                yield break;
+            }
+
+            var currentBatch = new List<DataItem>();
+            foreach (var dataItem in dataItems)
+            {
+                if (currentBatch.Count == 0)
+                {
+                    AssertPduSizeForRead(new[] { dataItem });
+                    currentBatch.Add(dataItem);
+                    continue;
+                }
+
+                currentBatch.Add(dataItem);
+                if (CanReadDataItemsInSingleRequest(currentBatch))
+                {
+                    continue;
+                }
+
+                currentBatch.RemoveAt(currentBatch.Count - 1);
+                yield return currentBatch;
+
+                AssertPduSizeForRead(new[] { dataItem });
+                currentBatch = new List<DataItem> { dataItem };
+            }
+
+            if (currentBatch.Count > 0)
+            {
+                yield return currentBatch;
+            }
+        }
+
+        private bool CanReadDataItemsInSingleRequest(ICollection<DataItem> dataItems)
+        {
+            try
+            {
+                AssertPduSizeForRead(dataItems);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private static void AssertReadResponse(byte[] s7Data, int dataLength)
         {
             var expectedLength = dataLength + 18;

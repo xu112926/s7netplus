@@ -7,6 +7,7 @@
         private int startByte;
         private int bitNumber;
         private VarType varType;
+        private int varCount;
 
         public DataType DataType
         {
@@ -38,19 +39,39 @@
             set => varType = value;
         }
 
+        public int VarCount
+        {
+            get => varCount;
+            set => varCount = value;
+        }
+
         public PLCAddress(string address)
         {
-            Parse(address, out dataType, out dbNumber, out varType, out startByte, out bitNumber);
+            Parse(address, out dataType, out dbNumber, out varType, out startByte, out bitNumber, out varCount);
+        }
+
+        private static void CheckDbAddress(string address)
+        {
+            var pattern = @"^DB\d+\.DB(?:[BDFWT]\d+|X\d+\.\d+|B\d+\.\d+|S\d+\.\d+|W\d+\.\d+)$";
+            if (string.IsNullOrWhiteSpace(address) || !System.Text.RegularExpressions.Regex.IsMatch(address, pattern))
+                throw new InvalidAddressException($"{address} Address is not supported");
         }
 
         public static void Parse(string input, out DataType dataType, out int dbNumber, out VarType varType, out int address, out int bitNumber)
         {
+            Parse(input, out dataType, out dbNumber, out varType, out address, out bitNumber, out _);
+        }
+
+        public static void Parse(string input, out DataType dataType, out int dbNumber, out VarType varType, out int address, out int bitNumber, out int varCount)
+        {
             bitNumber = -1;
             dbNumber = 0;
+            varCount = 1;
 
             switch (input.Substring(0, 2))
             {
                 case "DB":
+                    CheckDbAddress(input);
                     string[] strings = input.Split(new char[] { '.' });
                     if (strings.Length < 2)
                         throw new InvalidAddressException("To few periods for DB address");
@@ -63,10 +84,36 @@
                     switch (dbType)
                     {
                         case "DBB":
-                            varType = VarType.Byte;
+                            if (strings.Length == 3)
+                            {
+                                varType = VarType.String;
+                                varCount = int.Parse(strings[2]);
+                            }
+                            else
+                            {
+                                varType = VarType.Byte;
+                            }
+                            return;
+                        case "DBS":
+                            varType = VarType.S7String;
+                            varCount = int.Parse(strings[2]);
                             return;
                         case "DBW":
-                            varType = VarType.Word;
+                            if (strings.Length == 3)
+                            {
+                                varType = VarType.S7WString;
+                                varCount = int.Parse(strings[2]);
+                            }
+                            else
+                            {
+                                varType = VarType.Word;
+                            }
+                            return;
+                        case "DBF":
+                            varType = VarType.Real;
+                            return;
+                        case "DBT":
+                            varType = VarType.DateTime;
                             return;
                         case "DBD":
                             varType = VarType.DWord;

@@ -152,5 +152,56 @@ namespace S7.Net.UnitTest
             Assert.AreEqual(200, dataItem.StartByteAdr, "Wrong startbyte for QD200");
             Assert.AreEqual(0, dataItem.BitAdr, "Wrong bit for QD200");
         }
+
+        [TestMethod]
+        public void T13_ParseDbReal()
+        {
+            DataItem dataItem = DataItem.FromAddress("DB1.DBF10");
+
+            Assert.AreEqual(DataType.DataBlock, dataItem.DataType);
+            Assert.AreEqual(1, dataItem.DB);
+            Assert.AreEqual(VarType.Real, dataItem.VarType);
+            Assert.AreEqual(10, dataItem.StartByteAdr);
+            Assert.AreEqual(1, dataItem.Count);
+        }
+
+        [TestMethod]
+        public void T14_ParseDbDateTime()
+        {
+            DataItem dataItem = DataItem.FromAddress("DB1.DBT10");
+
+            Assert.AreEqual(DataType.DataBlock, dataItem.DataType);
+            Assert.AreEqual(1, dataItem.DB);
+            Assert.AreEqual(VarType.DateTime, dataItem.VarType);
+            Assert.AreEqual(10, dataItem.StartByteAdr);
+            Assert.AreEqual(1, dataItem.Count);
+        }
+
+        [TestMethod]
+        public void T15_ParseStringAddressesWithReservedLength()
+        {
+            DataItem stringItem = DataItem.FromAddress("DB1.DBB10.20");
+            DataItem s7StringItem = DataItem.FromAddress("DB1.DBS30.40");
+            DataItem s7WStringItem = DataItem.FromAddress("DB1.DBW50.60");
+
+            Assert.AreEqual(VarType.String, stringItem.VarType);
+            Assert.AreEqual(10, stringItem.StartByteAdr);
+            Assert.AreEqual(20, stringItem.Count);
+
+            Assert.AreEqual(VarType.S7String, s7StringItem.VarType);
+            Assert.AreEqual(30, s7StringItem.StartByteAdr);
+            Assert.AreEqual(40, s7StringItem.Count);
+
+            Assert.AreEqual(VarType.S7WString, s7WStringItem.VarType);
+            Assert.AreEqual(50, s7WStringItem.StartByteAdr);
+            Assert.AreEqual(60, s7WStringItem.Count);
+        }
+
+        [TestMethod]
+        public void T16_InvalidDbAddressesThrowInvalidAddressException()
+        {
+            Assert.ThrowsException<InvalidAddressException>(() => DataItem.FromAddress("DB1.DBQ10"));
+            Assert.ThrowsException<InvalidAddressException>(() => DataItem.FromAddress("DB1.DBB10.foo"));
+        }
     }
 }

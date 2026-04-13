@@ -95,7 +95,7 @@ namespace S7.Net
         public object? Read(string variable)
         {
             var adr = new PLCAddress(variable);
-            return Read(adr.DataType, adr.DbNumber, adr.StartByte, adr.VarType, 1, (byte)adr.BitNumber);
+            return Read(adr.DataType, adr.DbNumber, adr.StartByte, adr.VarType, adr.VarCount, (byte)adr.BitNumber);
         }
 
         /// <summary>
@@ -464,6 +464,14 @@ namespace S7.Net
         /// </summary>
         /// <param name="dataItems">List of dataitems that contains the list of variables that must be read.</param>
         public void ReadMultipleVars(List<DataItem> dataItems)
+        {
+            foreach (var batch in SplitReadDataItemsIntoBatches(dataItems))
+            {
+                ReadMultipleVarsSingleRequest(batch);
+            }
+        }
+
+        private void ReadMultipleVarsSingleRequest(List<DataItem> dataItems)
         {
             AssertPduSizeForRead(dataItems);
 

@@ -57,11 +57,11 @@ namespace S7.Net.Types
         /// </summary>
         /// <param name="address">The address to create the DataItem for.</param>
         /// <returns>A new <see cref="DataItem"/> instance with properties parsed from <paramref name="address"/>.</returns>
-        /// <remarks>The <see cref="Count" /> property is not parsed from the address.</remarks>
+        /// <remarks>The <see cref="Count" /> property is parsed from string address forms that include a reserved length.</remarks>
         public static DataItem FromAddress(string address)
         {
             PLCAddress.Parse(address, out var dataType, out var dbNumber, out var varType, out var startByte,
-                out var bitNumber);
+                out var bitNumber, out var varCount);
 
             return new DataItem
             {
@@ -69,6 +69,7 @@ namespace S7.Net.Types
                 DB = dbNumber,
                 VarType = varType,
                 StartByteAdr = startByte,
+                Count = varCount,
                 BitAdr = (byte) (bitNumber == -1 ? 0 : bitNumber)
             };
         }
