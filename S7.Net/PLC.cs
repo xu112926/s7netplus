@@ -237,6 +237,18 @@ namespace S7.Net
 
         private IEnumerable<List<DataItem>> SplitReadDataItemsIntoBatches(List<DataItem> dataItems)
         {
+            return SplitDataItemsIntoBatches(dataItems, AssertPduSizeForRead);
+        }
+
+        private IEnumerable<List<DataItem>> SplitWriteDataItemsIntoBatches(IReadOnlyCollection<DataItem> dataItems)
+        {
+            return SplitDataItemsIntoBatches(dataItems, AssertPduSizeForWrite);
+        }
+
+        private static IEnumerable<List<DataItem>> SplitDataItemsIntoBatches(
+            IReadOnlyCollection<DataItem> dataItems,
+            Action<ICollection<DataItem>> assertBatchFits)
+        {
             if (dataItems.Count == 0)
             {
                 yield break;
@@ -247,13 +259,13 @@ namespace S7.Net
             {
                 if (currentBatch.Count == 0)
                 {
-                    AssertPduSizeForRead([dataItem]);
+                    assertBatchFits([dataItem]);
                     currentBatch.Add(dataItem);
                     continue;
                 }
 
                 currentBatch.Add(dataItem);
-                if (CanReadDataItemsInSingleRequest(currentBatch))
+                if (CanFitDataItemsInSingleRequest(currentBatch, assertBatchFits))
                 {
                     continue;
                 }
@@ -261,7 +273,7 @@ namespace S7.Net
                 currentBatch.RemoveAt(currentBatch.Count - 1);
                 yield return currentBatch;
 
-                AssertPduSizeForRead([dataItem]);
+                assertBatchFits([dataItem]);
                 currentBatch = new List<DataItem> { dataItem };
             }
 
@@ -271,11 +283,13 @@ namespace S7.Net
             }
         }
 
-        private bool CanReadDataItemsInSingleRequest(ICollection<DataItem> dataItems)
+        private static bool CanFitDataItemsInSingleRequest(
+            ICollection<DataItem> dataItems,
+            Action<ICollection<DataItem>> assertBatchFits)
         {
             try
             {
-                AssertPduSizeForRead(dataItems);
+                assertBatchFits(dataItems);
                 return true;
             }
             catch

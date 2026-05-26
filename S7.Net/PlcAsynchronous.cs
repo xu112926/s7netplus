@@ -542,8 +542,15 @@ namespace S7.Net
         /// <returns>Task that completes when response from PLC is parsed.</returns>
         public async Task WriteAsync(params DataItem[] dataItems)
         {
-            AssertPduSizeForWrite(dataItems);
+            foreach (var batch in SplitWriteDataItemsIntoBatches(dataItems))
+            {
+                await WriteSingleRequestAsync(batch.ToArray()).ConfigureAwait(false);
+            }
+        }
 
+        private async Task WriteSingleRequestAsync(DataItem[] dataItems)
+        {
+            AssertPduSizeForWrite(dataItems);
             var message = new ByteArray();
             var length = S7WriteMultiple.CreateRequest(message, dataItems);
 

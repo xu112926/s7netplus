@@ -350,8 +350,15 @@ namespace S7.Net
         /// <param name="dataItems">The DataItem(s) to write to the PLC.</param>
         public void Write(params DataItem[] dataItems)
         {
-            AssertPduSizeForWrite(dataItems);
+            foreach (var batch in SplitWriteDataItemsIntoBatches(dataItems))
+            {
+                WriteSingleRequest(batch.ToArray());
+            }
+        }
 
+        private void WriteSingleRequest(DataItem[] dataItems)
+        {
+            AssertPduSizeForWrite(dataItems);
             var message = new ByteArray();
             var length = S7WriteMultiple.CreateRequest(message, dataItems);
             var response = RequestTsdu(message.Array, 0, length);
