@@ -247,7 +247,7 @@ namespace S7.Net
             {
                 if (currentBatch.Count == 0)
                 {
-                    AssertPduSizeForRead(new[] { dataItem });
+                    AssertPduSizeForRead([dataItem]);
                     currentBatch.Add(dataItem);
                     continue;
                 }
@@ -261,7 +261,7 @@ namespace S7.Net
                 currentBatch.RemoveAt(currentBatch.Count - 1);
                 yield return currentBatch;
 
-                AssertPduSizeForRead(new[] { dataItem });
+                AssertPduSizeForRead([dataItem]);
                 currentBatch = new List<DataItem> { dataItem };
             }
 
